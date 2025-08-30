@@ -17,6 +17,7 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
+// Generate YYYYMMDDTHHMMSS in Chicago local time
 function chicagoDateTime(dateStr, hour, minute) {
   const d = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`);
   const parts = new Intl.DateTimeFormat("en-US", {
@@ -29,6 +30,7 @@ function chicagoDateTime(dateStr, hour, minute) {
   return `${vals.year}${vals.month}${vals.day}T${vals.hour}${vals.minute}${vals.second}`;
 }
 
+// Format event start/end times
 function datetimeformater(dateStr) {
   return {
     dtStart: chicagoDateTime(dateStr, 19, 0),
@@ -36,6 +38,7 @@ function datetimeformater(dateStr) {
   };
 }
 
+// Build ICS calendar
 export function buildICS(events) {
   const ics = [
     "BEGIN:VCALENDAR",
@@ -62,6 +65,7 @@ export function buildICS(events) {
     "END:STANDARD",
     "END:VTIMEZONE"
   ];
+
   for (const ev of events) {
     const { dtStart, dtEnd } = datetimeformater(ev.date);
     ics.push(
@@ -75,6 +79,8 @@ export function buildICS(events) {
       "END:VEVENT"
     );
   }
+
+  // Ensure final CRLF
   ics.push("END:VCALENDAR", "");
   return ics.join("\r\n");
 }
