@@ -42,7 +42,9 @@ export function buildICS(events) {
   const ics = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//Tuesday Night Calendar//EN"
+    "PRODID:-//Tuesday Night Calendar//EN",
+    "X-WR-CALNAME:Tuesday Night Book Club",
+    "X-WR-TIMEZONE:America/Chicago"
   ];
   for (const ev of events) {
     const { dtStart, dtEnd } = datetimeformater(ev.date);
