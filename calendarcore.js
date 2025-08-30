@@ -44,7 +44,25 @@ export function buildICS(events) {
     "VERSION:2.0",
     "PRODID:-//Tuesday Night Calendar//EN",
     "X-WR-CALNAME:Tuesday Night Book Club",
-    "X-WR-TIMEZONE:America/Chicago"
+    "X-WR-TIMEZONE:America/Chicago",
+    "BEGIN:VTIMEZONE",
+    "TZID:America/Chicago",
+    "X-LIC-LOCATION:America/Chicago",
+    "BEGIN:DAYLIGHT",
+    "TZOFFSETFROM:-0600",
+    "TZOFFSETTO:-0500",
+    "TZNAME:CDT",
+    "DTSTART:19700308T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=2SU",
+    "END:DAYLIGHT",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:-0500",
+    "TZOFFSETTO:-0600",
+    "TZNAME:CST",
+    "DTSTART:19701101T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=11;BYDAY=1SU",
+    "END:STANDARD",
+    "END:VTIMEZONE"
   ];
   for (const ev of events) {
     const { dtStart, dtEnd } = datetimeformater(ev.date);
@@ -52,8 +70,8 @@ export function buildICS(events) {
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
       `SUMMARY:${ev.title}`,
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
+      `DTSTART;TZID=America/Chicago:${dtStart.replace(/Z$/, '')}`,
+      `DTEND;TZID=America/Chicago:${dtEnd.replace(/Z$/, '')}`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
