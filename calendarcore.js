@@ -18,19 +18,19 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
-// Hardcoded 2-hour shift for Chicago events
+// Convert 7:00 PM and 9:30 PM Chicago time to UTC using Luxon
+function chicagoToUTC(dateStr, hour, minute) {
+  const dt = DateTime.fromISO(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`, {
+    zone: "America/Chicago"
+  });
+  return dt.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
+}
+
 function datetimeformater(dateStr) {
-  // All-day events: DTSTART = event day, DTEND = next day (exclusive)
-  const [year, month, day] = dateStr.split("-");
-  const dtStart = `${year}${month}${day}`;
-  // calculate next day
-  const nextDate = new Date(dateStr);
-  nextDate.setDate(nextDate.getDate() + 1);
-  const nextYear = nextDate.getFullYear();
-  const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
-  const nextDay = String(nextDate.getDate()).padStart(2, "0");
-  const dtEnd = `${nextYear}${nextMonth}${nextDay}`;
-  return { dtStart, dtEnd };
+  return {
+    dtStart: chicagoToUTC(dateStr, 19, 0),
+    dtEnd: chicagoToUTC(dateStr, 21, 30)
+  };
 }
 
 // Build ICS calendar
@@ -49,9 +49,8 @@ export function buildICS(events) {
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
       `SUMMARY:${ev.title}`,
-      `DTSTART;VALUE=DATE:${dtStart}`,
-      `DTEND;VALUE=DATE:${dtEnd}`,
-      `X-MICROSOFT-CDO-ALLDAYEVENT:TRUE`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
