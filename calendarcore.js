@@ -1,4 +1,5 @@
 import { Client } from "@notionhq/client";
+import { DateTime } from "luxon";
 
 const notion = new Client({ auth: process.env.TOKEN });
 const databaseId = process.env.DB_ID;
@@ -17,11 +18,12 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
-// Convert 7:00 PM and 9:30 PM Chicago time to UTC
+// Convert 7:00 PM and 9:30 PM Chicago time to UTC using Luxon
 function chicagoToUTC(dateStr, hour, minute) {
-  // Chicago time (Central) offset for standard/daylight automatically handled by Date
-  const chicagoDate = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00-05:00`);
-  return chicagoDate.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  const dt = DateTime.fromISO(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`, {
+    zone: "America/Chicago"
+  });
+  return dt.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
 }
 
 function datetimeformater(dateStr) {
