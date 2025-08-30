@@ -17,17 +17,13 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
-// Generate YYYYMMDDTHHMMSS in Chicago local time
+// Generate YYYYMMDDTHHMMSS in Chicago local time without using Date
 function chicagoDateTime(dateStr, hour, minute) {
-  const d = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`);
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Chicago",
-    hour12: false,
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit"
-  }).formatToParts(d);
-  const vals = Object.fromEntries(parts.map(p => [p.type, p.value]));
-  return `${vals.year}${vals.month}${vals.day}T${vals.hour}${vals.minute}${vals.second}`;
+  const [year, month, day] = dateStr.split("-");
+  const hh = String(hour).padStart(2, "0");
+  const mm = String(minute).padStart(2, "0");
+  const ss = "00";
+  return `${year}${month}${day}T${hh}${mm}${ss}`;
 }
 
 // Format event start/end times
