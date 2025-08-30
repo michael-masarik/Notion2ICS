@@ -51,6 +51,7 @@ export function buildICS(events) {
       `SUMMARY:${ev.title}`,
       `DTSTART;VALUE=DATE:${dtStart}`,
       `DTEND;VALUE=DATE:${dtEnd}`,
+      `X-MICROSOFT-CDO-ALLDAYEVENT:TRUE`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
