@@ -19,18 +19,18 @@ export async function fetchNotionEvents() {
 }
 
 // Hardcoded 2-hour shift for Chicago events
-function chicagoToUTCHardcoded(dateStr, hour, minute) {
-  const dt = DateTime.fromISO(`${dateStr}T${String(hour+2).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`, {
-    zone: "America/Chicago"
-  });
-  return dt.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
-}
-
 function datetimeformater(dateStr) {
-  return {
-    dtStart: chicagoToUTCHardcoded(dateStr, 21, 0),
-    dtEnd: chicagoToUTCHardcoded(dateStr, 23, 30)
-  };
+  // All-day events: DTSTART = event day, DTEND = next day (exclusive)
+  const [year, month, day] = dateStr.split("-");
+  const dtStart = `${year}${month}${day}`;
+  // calculate next day
+  const nextDate = new Date(dateStr);
+  nextDate.setDate(nextDate.getDate() + 1);
+  const nextYear = nextDate.getFullYear();
+  const nextMonth = String(nextDate.getMonth() + 1).padStart(2, "0");
+  const nextDay = String(nextDate.getDate()).padStart(2, "0");
+  const dtEnd = `${nextYear}${nextMonth}${nextDay}`;
+  return { dtStart, dtEnd };
 }
 
 // Build ICS calendar
@@ -49,8 +49,8 @@ export function buildICS(events) {
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
       `SUMMARY:${ev.title}`,
-      `DTSTART:${dtStart}`,
-      `DTEND:${dtEnd}`,
+      `DTSTART;VALUE=DATE:${dtStart}`,
+      `DTEND;VALUE=DATE:${dtEnd}`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
