@@ -20,7 +20,7 @@ export async function fetchNotionEvents() {
 
 // Hardcoded 2-hour shift for Chicago events
 function chicagoToUTCHardcoded(dateStr, hour, minute) {
-  const dt = DateTime.fromISO(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`, {
+  const dt = DateTime.fromISO(`${dateStr}T${String(hour+2).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`, {
     zone: "America/Chicago"
   });
   return dt.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
