@@ -17,20 +17,17 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
-// Generate YYYYMMDDTHHMMSS in Chicago local time without using Date
-function chicagoDateTime(dateStr, hour, minute) {
-  const [year, month, day] = dateStr.split("-");
-  const hh = String(hour).padStart(2, "0");
-  const mm = String(minute).padStart(2, "0");
-  const ss = "00";
-  return `${year}${month}${day}T${hh}${mm}${ss}`;
+// Convert 7:00 PM and 9:30 PM Chicago time to UTC
+function chicagoToUTC(dateStr, hour, minute) {
+  // Chicago time (Central) offset for standard/daylight automatically handled by Date
+  const chicagoDate = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00-05:00`);
+  return chicagoDate.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 }
 
-// Format event start/end times
 function datetimeformater(dateStr) {
   return {
-    dtStart: chicagoDateTime(dateStr, 19, 0),
-    dtEnd: chicagoDateTime(dateStr, 21, 30)
+    dtStart: chicagoToUTC(dateStr, 19, 0),
+    dtEnd: chicagoToUTC(dateStr, 21, 30)
   };
 }
 
@@ -68,8 +65,8 @@ export function buildICS(events) {
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
       `SUMMARY:${ev.title}`,
-      `DTSTART;TZID=America/Chicago:${dtStart}`,
-      `DTEND;TZID=America/Chicago:${dtEnd}`,
+      `DTSTART:${dtStart}`,
+      `DTEND:${dtEnd}`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
