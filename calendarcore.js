@@ -17,25 +17,23 @@ export async function fetchNotionEvents() {
   }).filter(Boolean);
 }
 
-function zonedDateToUTC(dateStr, hour, minute, timeZone) {
-  const local = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`);
+function chicagoDateTime(dateStr, hour, minute) {
+  const d = new Date(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}:00`);
   const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone, hour12: false,
+    timeZone: "America/Chicago",
+    hour12: false,
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit"
-  }).formatToParts(local);
-  const values = Object.fromEntries(parts.map(p => [p.type, p.value]));
-  return new Date(`${values.year}-${values.month}-${values.day}T${values.hour}:${values.minute}:${values.second}Z`);
-}
-
-function formatICSDate(date) {
-  return date.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+  }).formatToParts(d);
+  const vals = Object.fromEntries(parts.map(p => [p.type, p.value]));
+  return `${vals.year}${vals.month}${vals.day}T${vals.hour}${vals.minute}${vals.second}`;
 }
 
 function datetimeformater(dateStr) {
-  const start = zonedDateToUTC(dateStr, 19, 0, "America/Chicago");
-  const end   = zonedDateToUTC(dateStr, 21, 30, "America/Chicago");
-  return { dtStart: formatICSDate(start), dtEnd: formatICSDate(end) };
+  return {
+    dtStart: chicagoDateTime(dateStr, 19, 0),
+    dtEnd: chicagoDateTime(dateStr, 21, 30)
+  };
 }
 
 export function buildICS(events) {
@@ -70,8 +68,8 @@ export function buildICS(events) {
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
       `SUMMARY:${ev.title}`,
-      `DTSTART;TZID=America/Chicago:${dtStart.replace(/Z$/, '')}`,
-      `DTEND;TZID=America/Chicago:${dtEnd.replace(/Z$/, '')}`,
+      `DTSTART;TZID=America/Chicago:${dtStart}`,
+      `DTEND;TZID=America/Chicago:${dtEnd}`,
       `DESCRIPTION:${ev.reading}`,
       `LOCATION:${ev.hosting}`,
       "END:VEVENT"
