@@ -57,6 +57,6 @@ export function buildICS(events) {
       "END:VEVENT"
     );
   }
-  ics.push("END:VCALENDAR");
-  return ics.join("\r\n") + "\r\n";
+  ics.push("END:VCALENDAR", "");
+  return ics.join("\r\n");
 }
