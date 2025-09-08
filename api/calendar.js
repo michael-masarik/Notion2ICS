@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     const ics = buildICS(events);
     res.setHeader("Content-Type", "text/calendar; charset=utf-8");
     //res.setHeader("Content-Disposition", "inline; filename=calendar.ics");
-    res.setHeader("Cache-Control", "s-maxage=3600, stale-while-revalidate");
+    res.setHeader("Cache-Control", "s-maxage=1800, stale-while-revalidate");
     res.status(200).send(ics);
     console.log("Success!");
   } catch (err) {
