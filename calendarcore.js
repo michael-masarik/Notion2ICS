@@ -10,7 +10,7 @@ export async function fetchNotionEvents() {
     if (!page.properties.Date.date?.start) return null;
     return {
       id: page.id,
-      title: page.properties.Name.title[0]?.text.content || "No title",
+      title: page.properties.Name.title.map(t => t.text.content).join("") || "No title",
       hosting: page.properties.Hosting.select?.name || "TBD",
       reading: page.properties.Reading.rich_text[0]?.text.content || "Missing",
       date: page.properties.Date.date.start
@@ -33,6 +33,17 @@ function datetimeformater(dateStr) {
   };
 }
 
+function foldLine(line) {
+  const maxLength = 75;
+  let result = "";
+  while (line.length > maxLength) {
+    result += line.slice(0, maxLength) + "\r\n ";
+    line = line.slice(maxLength);
+  }
+  result += line;
+  return result;
+}
+
 // Build ICS calendar
 export function buildICS(events) {
   const ics = [
@@ -48,11 +59,11 @@ export function buildICS(events) {
     ics.push(
       "BEGIN:VEVENT",
       `UID:${ev.id}@notion`,
-      `SUMMARY:${ev.title}`,
+      foldLine(`SUMMARY:${ev.title}`),
       `DTSTART:${dtStart}`,
       `DTEND:${dtEnd}`,
-      `DESCRIPTION:${ev.reading}`,
-      `LOCATION:${ev.hosting}`,
+      foldLine(`DESCRIPTION:${ev.reading}`),
+      foldLine(`LOCATION:${ev.hosting}`),
       "END:VEVENT"
     );
   }
