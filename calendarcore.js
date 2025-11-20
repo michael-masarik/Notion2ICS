@@ -3,33 +3,57 @@ import { DateTime } from "luxon";
 
 const notion = new Client({ auth: process.env.TOKEN });
 const databaseId = process.env.DB_ID;
+const ADDRESSES = {
+  "Masariks": "5735 Aspen Ct, Denmark, WI 54208",
+  "O'Ds": "3530 Nicolet Dr, Green Bay, WI 54311",
+  "Feldhausen": "2456 Orion Trl, Green Bay, WI 54311"
+};
+function escapeICS(str) {
+  return str.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+function adressFor(key) {
+    var loc = ADDRESSES[key] || key;
+    loc = escapeICS(loc);
+    return loc;
+  }
 
 export async function fetchNotionEvents() {
   const response = await notion.databases.query({ database_id: databaseId });
-  return response.results.map(page => {
-    if (!page.properties.Date.date?.start) return null;
-    return {
-      id: page.id,
-      title: page.properties.Name.title.map(t => t.text.content).join("") || "No title",
-      hosting: page.properties.Hosting.select?.name || "TBD",
-      reading: page.properties.Reading.rich_text[0]?.text.content || "Missing",
-      date: page.properties.Date.date.start
-    };
-  }).filter(Boolean);
+  return response.results
+    .map((page) => {
+      if (!page.properties.Date.date?.start) return null;
+      return {
+        id: page.id,
+        title:
+          page.properties.Name.title.map((t) => t.text.content).join("") ||
+          "No title",
+        hosting: page.properties.Hosting.select?.name || "TBD",
+        reading:
+          page.properties.Reading.rich_text[0]?.text.content || "Missing",
+        date: page.properties.Date.date.start,
+      };
+    })
+    .filter(Boolean);
 }
 
 // Convert 7:00 PM and 9:30 PM Chicago time to UTC using Luxon
 function chicagoToUTC(dateStr, hour, minute) {
-  const dt = DateTime.fromISO(`${dateStr}T${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`, {
-    zone: "America/Chicago"
-  });
+  const dt = DateTime.fromISO(
+    `${dateStr}T${String(hour).padStart(2, "0")}:${String(minute).padStart(
+      2,
+      "0"
+    )}`,
+    {
+      zone: "America/Chicago",
+    }
+  );
   return dt.toUTC().toFormat("yyyyLLdd'T'HHmmss'Z'");
 }
 
 function datetimeformater(dateStr) {
   return {
     dtStart: chicagoToUTC(dateStr, 19, 0),
-    dtEnd: chicagoToUTC(dateStr, 21, 30)
+    dtEnd: chicagoToUTC(dateStr, 21, 30),
   };
 }
 
@@ -51,9 +75,9 @@ export function buildICS(events) {
     "VERSION:2.0",
     "PRODID:-//Tuesday Night Calendar//EN",
     "X-WR-CALNAME:Tuesday Night Book Club",
-    "X-WR-TIMEZONE:America/Chicago"
+    "X-WR-TIMEZONE:America/Chicago",
   ];
-
+  
   for (const ev of events) {
     const { dtStart, dtEnd } = datetimeformater(ev.date);
     ics.push(
@@ -63,7 +87,7 @@ export function buildICS(events) {
       `DTSTART:${dtStart}`,
       `DTEND:${dtEnd}`,
       foldLine(`DESCRIPTION:${ev.reading}`),
-      foldLine(`LOCATION:${ev.hosting}`),
+      foldLine(`LOCATION:${adressFor(ev.hosting)}`),
       "END:VEVENT"
     );
   }
